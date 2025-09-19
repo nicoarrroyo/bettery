@@ -1,3 +1,5 @@
+# a better battery estimator for windows
+
 # Initialize an empty array to store battery readings
 $script:log = @()
 
@@ -7,8 +9,8 @@ Add-Type -AssemblyName System.Windows.Forms.DataVisualization
 
 # Create the form (the window)
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Battery Estimator"
-$form.Size = New-Object System.Drawing.Size(450,350)
+$form.Text = "bettery"
+$form.Size = New-Object System.Drawing.Size(280,150)
 $form.StartPosition = "CenterScreen"
 
 # Create a label to show battery info
@@ -18,25 +20,26 @@ $label.Location = New-Object System.Drawing.Point(10,10)
 $label.Font = New-Object System.Drawing.Font("Segoe UI", 12)
 $form.Controls.Add($label)
 
-# Create the chart
-$chart = New-Object System.Windows.Forms.DataVisualization.Charting.Chart
-$chart.Size = New-Object System.Drawing.Size(400, 250)
-$chart.Location = New-Object System.Drawing.Point(10, 60)
+# Create the toggle button
+$toggleButton = New-Object System.Windows.Forms.Button
+$toggleButton.Text = "Always on Top: OFF"
+$toggleButton.Size = New-Object System.Drawing.Size(120, 30)
+$toggleButton.Location = New-Object System.Drawing.Point(10, 60)
+$form.Controls.Add($toggleButton)
 
-# Create chart area
-$chartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
-$chartArea.AxisX.Title = "Entry #"
-$chartArea.AxisY.Title = "Runtime (min)"
-$chart.ChartAreas.Add($chartArea)
+$toggleButton.Add_Click({
+    $form.TopMost = -not $form.TopMost
+    if ($form.TopMost) {
+        $toggleButton.Text = "Always on Top: ON"
+		$toggleButton.BackColor = [System.Drawing.Color]::LightGreen
+    } else {
+        $toggleButton.Text = "Always on Top: OFF"
+		$toggleButton.BackColor = [System.Drawing.Color]::LightGray
+    }
+})
 
-# Create series
-$series = New-Object System.Windows.Forms.DataVisualization.Charting.Series
-$series.Name = "battery_run_time"
-$series.ChartType = [System.Windows.Forms.DataVisualization.Charting.SeriesChartType]::Line
-$chart.Series.Add($series)
-
-# Add chart to form
-$form.Controls.Add($chart)
+$tooltip = New-Object System.Windows.Forms.ToolTip
+$tooltip.SetToolTip($toggleButton, "Click to keep this window above others")
 
 # Set how many readings we want to keep for our moving average
 $max_entries = 200
@@ -69,17 +72,13 @@ function update_battery_estimate {
         # Keep only the last $max_entries readings
         $script:log = $script:log[-$max_entries..-1]
     }
-	
-	$chart.Series["battery_run_time"].Points.Clear()
-	
+		
     # If we have at least two readings, we can estimate remaining battery time
     if ($script:log.Count -ge 2) {
 		$runtime_sum = 0
 		for ($i=0; $i -lt $script:log.Count; $i++) {
 			$this_entry = $script:log[$i]
 			$runtime_sum = $runtime_sum + $this_entry.runtime
-			
-			$chart.Series["battery_run_time"].Points.AddXY($i + 1, $script:log[$i].runtime)
 		}
 		
 		$average_runtime = [math]::Round(($runtime_sum / $script:log.Count))
@@ -94,7 +93,7 @@ function update_battery_estimate {
 }
 
 $timer = New-Object System.Windows.Forms.Timer
-$timer.Interval = 300 # in ms
+$timer.Interval = 1000 # in ms
 $timer.Add_Tick({ update_battery_estimate })
 $timer.Start()
 
