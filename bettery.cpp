@@ -1,5 +1,5 @@
 // ===================================================================================
-// BATTERY MONITOR - REFACTORED
+// BATTERY MONITOR
 // ===================================================================================
 
 #include <windows.h>
@@ -19,7 +19,7 @@ HWND closeButton;          // Custom 'X' close button
 bool isTopMost = true;      // Track "Always on Top" state
 std::vector<int> runtimeLog; // Recent battery runtime estimates
 int runtimeSum = 0;          // Running sum of runtime values
-const int MAX_ENTRIES = 10; // Max history size
+const int MAX_ENTRIES = 5; // Max history size
 
 const UINT_PTR MAIN_UPDATE_TIMER_ID = 1; // Unique ID for main timer
 
@@ -165,7 +165,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // Initial setup
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-    SetTimer(hwnd, MAIN_UPDATE_TIMER_ID, 2000, NULL); // 20 second update
+    SetTimer(hwnd, MAIN_UPDATE_TIMER_ID, 5000, NULL); // 5 second update
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
 
